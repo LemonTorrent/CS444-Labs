@@ -73,7 +73,17 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 		cprintf(" %08x", *(ebp+4));
 		cprintf(" %08x", *(ebp+5));
 		cprintf(" %08x\n", *(ebp+6));
+
+		int eip = ebp[1];
+		struct Eipdebuginfo info;
+		debuginfo_eip(eip, &info);
+
+		cprintf("\t%s:", info.eip_file);
+		cprintf("%d: ", info.eip_line);
+		cprintf("%.*s+", info.eip_fn_namelen, info.eip_fn_name);
+		cprintf("%d\n", eip-info.eip_fn_addr);
 		
+		// Both of the following lines work for the purpose of giving the next value to ebp
 		//ebp = (int*) *ebp;
 		ebp = (int*) ebp[0];
 	}
