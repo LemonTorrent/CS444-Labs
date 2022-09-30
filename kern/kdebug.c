@@ -181,6 +181,31 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	//	which one.
 	// Your code here.
 
+	// while (lline < rline) {
+		
+	// 	lline++;
+	// }
+
+	// Find stab N_SLINE
+	stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
+
+	// The below line was given in the provided example/hint
+	// It sets 
+	// if (stabs[lline].n_desc) {
+	// 	info->eip_line = stabs[lline].n_desc;
+
+	// } else {
+	// 	return -1;
+	// }
+
+	// If the line number stab is not found, -1 is returned
+	if (!stabs[lline].n_desc) {
+		return -1;
+	}
+
+	// Set info->eip_line to the correct line number
+	info->eip_line = stabs[lline].n_desc;
+
 
 	// Search backwards from the line number for the relevant filename
 	// stab.
