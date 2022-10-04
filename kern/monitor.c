@@ -60,8 +60,35 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
 	// LAB 1: Your code here.
     // HINT 1: use read_ebp().
+	int *ebp = (int *) read_ebp();
+	//cprintf("ebp %08x", ebp);
+
     // HINT 2: print the current ebp on the first line (not current_ebp[0])
-	return 0;
+	while (ebp != NULL) {
+		cprintf("ebp %08x  eip %08x  args", ebp, *(ebp+1));
+
+		// Separated lines for readablity of stack values
+		cprintf(" %08x", *(ebp+2));
+		cprintf(" %08x", *(ebp+3));
+		cprintf(" %08x", *(ebp+4));
+		cprintf(" %08x", *(ebp+5));
+		cprintf(" %08x\n", *(ebp+6));
+
+		int eip = ebp[1];
+		struct Eipdebuginfo info;
+		debuginfo_eip(eip, &info);
+
+		cprintf("\t%s:", info.eip_file);
+		cprintf("%d: ", info.eip_line);
+		cprintf("%.*s+", info.eip_fn_namelen, info.eip_fn_name);
+		cprintf("%d\n", eip-info.eip_fn_addr);
+		
+		// Both of the following lines work for the purpose of giving the next value to ebp
+		//ebp = (int*) *ebp;
+		ebp = (int*) ebp[0];
+	}
+
+	return 0; 
 }
 
 
