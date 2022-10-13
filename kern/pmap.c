@@ -93,8 +93,11 @@ boot_alloc(uint32_t n)
 	// the first virtual address that the linker did *not* assign
 	// to any kernel code or global variables.
 	if (!nextfree) {
+		//panic("Memory is not set up!");
 		extern char end[];
+		// creates and initializes nextfree pointer
 		nextfree = ROUNDUP((char *) end, PGSIZE);
+		cprintf("boot_alloc: just created nextfree\n");
 	}
 
 	// Allocate a chunk large enough to hold 'n' bytes, then update
@@ -103,10 +106,23 @@ boot_alloc(uint32_t n)
 	//
 	// LAB 2: Your code here.
 
+	// Testing Code:
+
+	// cprintf("boot_alloc memory at %x\n", nextfree);
+	// cprintf("Next memory at %x\n", ROUNDUP((char *) (nextfree+n), PGSIZE));
+	// if (n != 0) {
+	// 	char *next = nextfree;
+	// 	nextfree = ROUNDUP((char *) (nextfree+n), PGSIZE);
+	// 	return next;
+	// } else return nextfree;
+
+
+	// My first attempt:
 	// Return address of next free page if n==0 without allocating 
 	// anything
 	if (n == 0) {
-		panic("boot_alloc: No more memory\n");
+		//panic("boot_alloc: No more memory\n");
+		cprintf("boot_alloc: No more memory\n");
 		return nextfree;
 	}
 
@@ -167,10 +183,13 @@ mem_init(void)
 	// Your code goes here:
 
 	// Allocate an array of npages 'struct PageInfo's and store in 'pages'
-	struct PageInfo* pages = boot_alloc((npages * sizeof(struct PageInfo)));
+	//struct PageInfo* pages = boot_alloc((npages * sizeof(struct PageInfo)));
+	pages = boot_alloc((npages * sizeof(struct PageInfo)));
 
 	// Initialize all fields of each struct PageInfo to 0
+	
 	memset(pages, 0, npages * sizeof(struct PageInfo));
+	
 	//memset(pages, 0, sizeof(struct PageInfo));
 
 	//boot_alloc(pages);
@@ -277,11 +296,96 @@ page_init(void)
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
 	size_t i;
+
+	// Get address of beginning of hole
+	unsigned int io_begin = PGNUM(IOPHYSMEM);
+
+	// Use PADDR(boot_alloc(0)) to get end of hole, and PGNUM to get address
+	//unsigned int ext_mem_end = PGNUM(PADDR(boot_alloc(0))) + 1;
+	unsigned int ext_mem_end = PGNUM(PADDR(boot_alloc(0)));
+	
+	// for (i = 0; i < npages; i++) {
+	// 	pages[i].pp_ref = 0;
+	// 	pages[i].pp_link = page_free_list;
+	// 	page_free_list = &pages[i];
+	// }
+
+	// return;
+
+	//pages[0].pp_ref;
+	//pages[0].pp_link = page_free_list;
+	////page_free_list = &pages[0];
+
+	// for (i = 1; i < npages; i++) {
+	// 	pages[i].pp_ref = 0;
+	// 	pages[i].pp_link = page_free_list;
+	// 	page_free_list = &pages[i];
+	// }
+
+	// To Do: Need to set IOPHYSMEM as in use
+
+	// Testing code
+	// //for (i = 1; i < npages_basemem; i++) {
+	// for (i = 0; i < 1; i++) {
+	// 	pages[i].pp_ref = 0;
+	// 	pages[i].pp_link = page_free_list;
+	// 	page_free_list = &pages[i];
+	// }
+
+	// panic("Allocating memory");
+	// int med = (int)ROUNDUP(((char*)pages) + (sizeof(struct PageInfo) * npages) - 0xf0000000, PGSIZE)/PGSIZE;
+	// cprintf("pageinfo size: %d\n", sizeof(struct PageInfo));
+	// cprintf("%x\n", ((char*)pages) + (sizeof(struct PageInfo) * npages));
+	// cprintf("med=%d\n", med);
+	// for (i = med; i < npages; i++) {
+	// 	pages[i].pp_ref = 0;
+	// 	pages[i].pp_link = page_free_list;
+	// 	page_free_list = &pages[i];
+	// }
+
+	// My first attempt
 	for (i = 0; i < npages; i++) {
-		pages[i].pp_ref = 0;
-		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];
+		
+		// Only running first loop due to panics, why is this still failing with a triple fault?
+		// All three statements cause triple faults
+
+		if (i == 0) {
+			// Set page 0 with pp_ref = 1 so "null" is never returned as 
+			// a value of the linked list
+			//pages[i].pp_ref += 1;
+			
+			pages[i].pp_ref = 1;
+			//panic("Looking for memory problem");
+			//pages[i].pp_ref = (uint16_t) ~((unsigned int) 1);
+			// setting link of page to null value
+			//pages[i].pp_link = page_free_list;
+			//pages[i].pp_link = NULL;
+
+			// IDK if I should leave the following code in. Based on the 
+			// above comment, I think I should
+			//page_free_list = &pages[i];
+		} else if (i >= io_begin && i < ext_mem_end) {
+			//panic("Looking for memory problem");
+			pages[i].pp_ref += 1;
+
+			//pages[i].pp_link = NULL;
+			// pages[i].pp_link = page_free_list;
+
+			// IDK if I should leave the following code in. Based on the 
+			// above comment, I think I should
+			// page_free_list = &pages[i];
+		} else {
+			//panic("Looking for memory problem");
+			pages[i].pp_ref = 0;
+			pages[i].pp_link = page_free_list;
+			page_free_list = &pages[i];
+		}
+
 	}
+
+	//panic("Looking for memory problem");
+
+	cprintf("Finished page_init\n");
 }
 
 //
@@ -300,6 +404,29 @@ struct PageInfo *
 page_alloc(int alloc_flags)
 {
 	// Fill this function in
+
+	if (page_free_list == NULL) {
+		cprintf("Returning null\n");
+		return NULL;
+	}
+
+	// Do I need to check if the free page list/linked list exists?
+
+	struct PageInfo *a_page = page_free_list;
+	//page_free_list = page_free_list->pp_link;
+	page_free_list = a_page->pp_link;
+	a_page->pp_link = NULL;
+
+	cprintf("continuing to check flags: null\n");
+	if (alloc_flags & ALLOC_ZERO) {
+		//a_page->pp_ref = NULL;
+		a_page->pp_ref = 0;
+		//memset(page2kva(a_page), '\0', PGSIZE);
+		memset(page2kva(a_page), 0, PGSIZE);
+		//return a_page;
+	}
+	return a_page;
+
 	return 0;
 }
 
@@ -313,6 +440,17 @@ page_free(struct PageInfo *pp)
 	// Fill this function in
 	// Hint: You may want to panic if pp->pp_ref is nonzero or
 	// pp->pp_link is not NULL.
+
+	if (pp->pp_ref != 0 || pp->pp_link != NULL) {
+		panic("page_free: pp_ref is nonzero or not NULL\n");
+		return;
+	}
+
+	pp->pp_link = page_free_list;
+	page_free_list = pp;
+
+	return;
+
 }
 
 //
