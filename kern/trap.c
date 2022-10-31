@@ -216,14 +216,18 @@ trap_dispatch(struct Trapframe *tf)
 		case T_PGFLT:
 		{
 			// handle page fault here
-			page_fault_handler(tf);
-			break;
+			// page_fault_handler(tf);
+			// break;
+			print_trapframe(tf);
+			return page_fault_handler(tf);
 		}
 		case T_BRKPT:
 		{
 			// handle breakpoint here
 			print_trapframe(tf);
-			break;
+			// monitor(tf);
+			// break;
+			return monitor(tf);
 		}
 		case T_SYSCALL:
 		{
@@ -231,8 +235,20 @@ trap_dispatch(struct Trapframe *tf)
 			print_trapframe(tf);
 
 			// Runs trap
-			monitor(tf);
-			break;
+			// monitor(tf);
+			// break;
+			//return monitor(tf);
+			int32_t ret = syscall(
+				tf->tf_regs.reg_eax, 
+				tf->tf_regs.reg_edx, 
+				tf->tf_regs.reg_ecx,
+				tf->tf_regs.reg_ebx, 
+				tf->tf_regs.reg_edi, 
+				tf->tf_regs.reg_esi
+				);
+			tf->tf_regs.reg_eax = ret;
+			return;
+
 
 		}
 		default:
