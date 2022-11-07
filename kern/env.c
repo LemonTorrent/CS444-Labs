@@ -338,31 +338,6 @@ region_alloc(struct Env *e, void *va, size_t len)
 		
 		page_insert(e->env_pgdir, pg, begin, PTE_W | PTE_U);
 	}
-	// panic("region_alloc: we've reached region_alloc\n");
-
-
-	// First attempt:
-	size_t i;
-
-
-	// // Iterate through the virtual address space in steps of PGSIZE
-	// for (i = 0; i < (len / PGSIZE); i += 1) {
-	// 	// Grab the page table entry at va
-	// 	pte_t *p_pte = pgdir_walk(pgdir, (void *) va, 1);
-
-	// 	// Panic of page table entry is doesn't exist
-	// 	if (p_pte == NULL) {
-	// 		panic("boot_map_region: p_pte is NULL\n");
-	// 	}
-
-	// 	// Set permissions
-	// 	*p_pte = pa | PTE_P | perm;
-	// 	//*p_pte = PTE_ADDR(pa) | PTE_P | perm;
-
-	// 	// Increment virtual and physical addresses
-	// 	*va += PGSIZE;
-	// 	pa += PGSIZE;
-	// }
 
 
 }
