@@ -1,0 +1,47 @@
+Question 1:
+What is the purpose of having an individual handler function for each exception/
+interrupt? (i.e., if all exceptions/interrupts were delivered to the same 
+handler, what feature that exists in the current implementation could not be 
+provided?)
+
+The purpose of having an individual handler function for each exception and 
+interrupt is to protect the kernel mode through privilege isolation. This is 
+done by creating individual handlers to address different exceptions and the 
+respective specialized treatment of the exceptions.
+
+
+Question 2:
+Did you have to do anything to make the user/softint program behave correctly? 
+The grade script expects it to produce a general protection fault (trap 13), but 
+softint’s code says int $14. Why should this produce interrupt vector 13? What 
+happens if the kernel actually allows softint’s int $14 instruction to invoke 
+the kernel’s page fault handler (which is interrupt vector 14)?
+
+No, we didn’t have to do anything to make it behave correctly. This is because 
+the kernel is set up to not allow users to choose exceptions to invoke. The 
+above situation should produce interrupt vector because the user is attempting 
+to violate their privileges, which then triggers trap number 13. If the kernel 
+allowed the int $14 instruction to invoke the kernel’s page fault handler, this 
+would be violating the user’s access permissions and indicate that they had 
+access to higher level permissions than they should.
+
+
+Question 3:
+The break point test case will either generate a break point exception or a 
+general protection fault depending on how you initialized the break point entry 
+in the IDT (i.e., your call to SETGATE from trap_init). Why? How do you need to 
+set it up in order to get the breakpoint exception to work as specified above 
+and what incorrect setup would cause it to trigger a general protection fault?
+
+This is because kernel’s break point exception permissions are set to the user 
+level. If it tries to set to kernel level permissions, a general protection 
+fault will be raised.
+
+
+Question 4:
+What do you think is the point of these mechanisms, particularly in light of 
+what the user/softint test program does?
+
+The point of these mechanisms is to enforce permissions to protect applications 
+from interfering with the kernel, which can potentially have malicious 
+intentions.
