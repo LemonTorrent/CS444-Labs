@@ -309,6 +309,18 @@ mem_init_mp(void)
 	//     Permissions: kernel RW, user NONE
 	//
 	// LAB 4: Your code here:
+	uintptr_t kstacktop_i;
+	// uintptr_t kstacktop_i = KSTACKTOP;
+
+	for (int i = 0; i < NCPU; i++)
+	{
+		// virtual address
+		kstacktop_i = KSTACKTOP - i * (KSTKSIZE + KSTKGAP);
+
+		// boot_map_region(kern_pgdir, kstacktop_i, KSTKSIZE, &percpu_kstacks[i], PTE_W);
+		boot_map_region(kern_pgdir, kstacktop_i, KSTKSIZE, PADDR(percpu_kstacks[i]), PTE_W);
+
+	}
 
 }
 
@@ -367,8 +379,15 @@ page_init(void)
 
 		} else if (i >= io_begin && i < ext_mem_end) {
 
-			// Set page 0 with pp_ref = 1 to mark as used
+			// Set pages between io_begin and ext_mem_end with pp_ref = 1 to mark as used
 			pages[i].pp_ref = 1;
+
+		// } else if (i == MPENTRY_PADDR/PGSIZE ) {
+		} else if (i * PGSIZE == MPENTRY_PADDR) {
+
+			// Set MPENTRY_PADDR page as used
+			// pages[i].pp_ref = 1;
+			continue;
 
 		} else {
 
@@ -755,7 +774,62 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+
+	// // Calculate physical address start and end
+	// uintptr_t pa_start = ROUNDDOWN(pa, PGSIZE);
+	// uintptr_t pa_end = ROUNDUP(pa + size, PGSIZE);
+
+	// // physaddr_t pa_start = ROUNDDOWN(pa, PGSIZE);
+	// // physaddr_t pa_end = ROUNDUP(pa + size, PGSIZE);
+	
+	// //int size = pa_end - pa_start;
+
+	// // gets the last 12-bit of the address
+	// // physaddr_t pa_offset = pa & 0xfff;
+	// // uint32_t pa_offset = (void*) (pa & 0xfff);
+	// uint32_t pa_offset = pa & 0xfff;
+
+	// if (pa_end >= MMIOLIM) {
+	// 	panic("mmio_map_region: not enough memory\n");
+	// }
+
+	// // PTE_PCD = page cache disabled
+	// // PTE_PWT = page write through
+	// boot_map_region(kern_pgdir, base, (pa_end - base), pa, PTE_PCD|PTE_PWT|PTE_W);
+	// // boot_map_region(kern_pgdir, base, pa_offset, pa_start, PTE_PCD|PTE_PWT|PTE_W);
+	// // boot_map_region(kern_pgdir, base, (base - pa_offset), pa_start, PTE_PCD|PTE_PWT|PTE_W);
+
+	// // update base, base is static after each call
+
+	// // void* ret = (void*) (base - pa_offset);
+	// // void* ret = (void*) (base);
+	
+	// base = pa_end;
+	
+	// return (void*) (base - size);
+	// // return ret;
+
+	// // return (void*)(base + (pa_end - pa_start));
+	// // return (void*)(base - pa_offset);
+	// //return (void*)(pa_end - pa_start);
+	// //return (void*)(pa_offset);
+
+	uintptr_t pa_end = ROUNDUP(base + size, PGSIZE);
+	
+	if (pa_end > MMIOLIM) {
+		panic("Greater than mmiolim\n");
+	}
+
+	boot_map_region(kern_pgdir, base, (pa_end - base), pa, PTE_PCD|PTE_PWT|PTE_W);
+
+	void * ret = (void*) base;
+	uint32_t pa_offset = pa & 0xfff;
+
+
+	base = pa_end;
+
+	return (ret - pa_offset);
+	
 }
 
 static uintptr_t user_mem_check_addr;
