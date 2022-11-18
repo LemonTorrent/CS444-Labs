@@ -618,10 +618,10 @@ env_run(struct Env *e)
 
 	// LAB 3: Your code here.
 
-	if (e->env_status == ENV_RUNNING) {
+	if (curenv && curenv->env_status == ENV_RUNNING) {
 		//panic("env_run loop \n");
 
-		e->env_status = ENV_RUNNABLE;
+		curenv->env_status = ENV_RUNNABLE;
 	}
 
 	curenv = e;
@@ -635,6 +635,8 @@ env_run(struct Env *e)
 	e->env_runs += 1;
 
 	lcr3(PADDR(e->env_pgdir));
+
+	unlock_kernel();
 
 	env_pop_tf(&e->env_tf);
 

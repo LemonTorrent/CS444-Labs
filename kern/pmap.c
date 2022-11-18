@@ -310,16 +310,15 @@ mem_init_mp(void)
 	//
 	// LAB 4: Your code here:
 	uintptr_t kstacktop_i;
-	// uintptr_t kstacktop_i = KSTACKTOP;
 
 	for (int i = 0; i < NCPU; i++)
 	{
 		// virtual address
-		kstacktop_i = KSTACKTOP - i * (KSTKSIZE + KSTKGAP);
+		kstacktop_i = KSTACKTOP - KSTKSIZE - i * (KSTKSIZE + KSTKGAP);
 
 		// boot_map_region(kern_pgdir, kstacktop_i, KSTKSIZE, &percpu_kstacks[i], PTE_W);
 		boot_map_region(kern_pgdir, kstacktop_i, KSTKSIZE, PADDR(percpu_kstacks[i]), PTE_W);
-
+		
 	}
 
 }
@@ -386,8 +385,8 @@ page_init(void)
 		} else if (i * PGSIZE == MPENTRY_PADDR) {
 
 			// Set MPENTRY_PADDR page as used
-			// pages[i].pp_ref = 1;
-			continue;
+			pages[i].pp_ref = 1;
+			// continue;
 
 		} else {
 

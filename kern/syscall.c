@@ -284,6 +284,23 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	case SYS_env_destroy:
 		sys_env_destroy(a1);
 		return 0;
+	case SYS_getenvid:
+		return sys_getenvid();
+	case SYS_yield:
+		sys_yield();
+		return 0;
+	case SYS_exofork:
+		return sys_exofork();
+		break;
+	case SYS_page_alloc:
+		return sys_page_alloc(a1, (void*)a2, a3);
+		break;
+	case SYS_page_map:
+		return sys_page_map(a1, (void*)a2, a3, (void*)a4, a5);
+		break;
+	case SYS_page_unmap:
+		return sys_page_unmap(a1, (void*)a2);
+		break;
 	default:
 		return -E_INVAL;
 	}
