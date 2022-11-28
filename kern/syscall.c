@@ -124,10 +124,10 @@ sys_env_set_status(envid_t envid, int status)
 		return -E_INVAL;
 	}
 
-	struct Env *e; 
+	struct Env *e;
 	int ret = envid2env(envid, &e, 1);
-	//if (ret) return ret;	//bad_env
-	if (ret) {
+
+	if (ret < 0) {
 		return -E_BAD_ENV;
 	}
 
@@ -149,6 +149,18 @@ static int
 sys_env_set_pgfault_upcall(envid_t envid, void *func)
 {
 	// LAB 4: Your code here.
+
+	struct Env *e;
+
+    if (envid2env(envid, &e, 1) != 0) {
+        return -E_BAD_ENV;
+    }
+	
+	// func parameter is address of sys_env_set_pgfault_upcall
+    e->env_pgfault_upcall = func;
+	
+    return 0;
+
 	panic("sys_env_set_pgfault_upcall not implemented");
 }
 
