@@ -100,6 +100,16 @@ void t_simderr();
 
 void t_syscall();
 
+// Implementation for lab 4
+// define the trap function
+void th_irq_timer();
+void th_irq_kbd();
+void th_irq_serial();
+void th_irq_spurious();
+void th_irq_ide();
+void th_irq_error();
+
+
 void
 trap_init(void)
 {
@@ -139,6 +149,14 @@ trap_init(void)
 	SETGATE(idt[T_SIMDERR], 0, GD_KT, t_simderr, 0);
 
 	SETGATE(idt[T_SYSCALL], 0, GD_KT, t_syscall, 3);
+
+	// Implementation for lab 4:
+	SETGATE(idt[IRQ_OFFSET + IRQ_TIMER], 0, GD_KT, &th_irq_timer, 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, &th_irq_kbd, 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_SERIAL], 0, GD_KT, &th_irq_serial, 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_SPURIOUS], 0, GD_KT, &th_irq_spurious, 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_IDE], 0, GD_KT, &th_irq_ide, 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_ERROR], 0, GD_KT, &th_irq_error, 0);
 
 	// Per-CPU setup
 	trap_init_percpu();
@@ -297,6 +315,10 @@ trap_dispatch(struct Trapframe *tf)
 
 
 		}
+		case (IRQ_OFFSET + IRQ_TIMER):
+			lapic_eoi();
+			sched_yield();
+			return;
 		default:
 		{
 			// I don't know if we need to fill this in?
@@ -433,7 +455,7 @@ page_fault_handler(struct Trapframe *tf)
 
         // Determine the location
         if (tf->tf_esp >= UXSTACKTOP - PGSIZE && tf->tf_esp < UXSTACKTOP - 1) {
-            *(uint32_t *)(tf->tf_esp - 4) = 0;  // push an empty 32-bit word
+            // *(uint32_t *)(tf->tf_esp - 4) = 0;  // push an empty 32-bit word
             utf = (struct UTrapframe *)(tf->tf_esp - 4 - sizeof(struct UTrapframe));
         } else {
             utf = (struct UTrapframe *)(UXSTACKTOP - sizeof(struct UTrapframe));

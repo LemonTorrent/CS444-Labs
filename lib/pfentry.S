@@ -91,7 +91,7 @@ _pgfault_upcall:
 	// LAB 4: Your code here.
 
 	pop %esp
-	lea -4(%esp), %esp
+	// lea -4(%esp), %esp
 
 
 	// Return to re-execute the instruction that faulted.

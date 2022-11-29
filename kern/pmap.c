@@ -774,45 +774,6 @@ mmio_map_region(physaddr_t pa, size_t size)
 	//
 	// Your code here:
 
-	// // Calculate physical address start and end
-	// uintptr_t pa_start = ROUNDDOWN(pa, PGSIZE);
-	// uintptr_t pa_end = ROUNDUP(pa + size, PGSIZE);
-
-	// // physaddr_t pa_start = ROUNDDOWN(pa, PGSIZE);
-	// // physaddr_t pa_end = ROUNDUP(pa + size, PGSIZE);
-	
-	// //int size = pa_end - pa_start;
-
-	// // gets the last 12-bit of the address
-	// // physaddr_t pa_offset = pa & 0xfff;
-	// // uint32_t pa_offset = (void*) (pa & 0xfff);
-	// uint32_t pa_offset = pa & 0xfff;
-
-	// if (pa_end >= MMIOLIM) {
-	// 	panic("mmio_map_region: not enough memory\n");
-	// }
-
-	// // PTE_PCD = page cache disabled
-	// // PTE_PWT = page write through
-	// boot_map_region(kern_pgdir, base, (pa_end - base), pa, PTE_PCD|PTE_PWT|PTE_W);
-	// // boot_map_region(kern_pgdir, base, pa_offset, pa_start, PTE_PCD|PTE_PWT|PTE_W);
-	// // boot_map_region(kern_pgdir, base, (base - pa_offset), pa_start, PTE_PCD|PTE_PWT|PTE_W);
-
-	// // update base, base is static after each call
-
-	// // void* ret = (void*) (base - pa_offset);
-	// // void* ret = (void*) (base);
-	
-	// base = pa_end;
-	
-	// return (void*) (base - size);
-	// // return ret;
-
-	// // return (void*)(base + (pa_end - pa_start));
-	// // return (void*)(base - pa_offset);
-	// //return (void*)(pa_end - pa_start);
-	// //return (void*)(pa_offset);
-
 	uintptr_t pa_end = ROUNDUP(base + size, PGSIZE);
 	
 	if (pa_end > MMIOLIM) {

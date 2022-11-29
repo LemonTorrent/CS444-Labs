@@ -35,9 +35,11 @@ set_pgfault_handler(void (*handler)(struct UTrapframe *utf))
 				(void *) (UXSTACKTOP - PGSIZE),
 				PTE_W | PTE_U | PTE_P)) != 0) {
 			cprintf("set_pg_fault_handler: can't allocate new page, %e\n", ret);
-			panic("set_pg_fault_handler");
+			panic("set_pg_fault_handler: sys_page_alloc failed\n");
 		}
-		sys_env_set_pgfault_upcall(thisenv->env_id, _pgfault_upcall);
+		if (sys_env_set_pgfault_upcall(thisenv->env_id, _pgfault_upcall) != 0) {
+			panic("set_pg_fault_handler: sys_env_set_pgfault_upcall failed\n");
+		}
 		//panic("set_pgfault_handler not implemented");
 
 		// panic("set_pgfault_handler not implemented");
